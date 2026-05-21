@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from datetime import date
 
 app = FastAPI()
+next_id = 1
 
 expense = []
 
@@ -30,16 +31,18 @@ async def create_item(item: Expense):
 async def get_expense():
     return expense
 
-expense1 = Expense(
-    amount = 100,
-    category = "shoe",
-    description = "Nike airForce"
-)
-expense.append(expense1)
+@app.get("/expenses/{id}")
+async def get_one_expense(id: int):
+    for item in expense:
+        if item.id == id:
+            return item
+    raise HTTPException(status_code = 404, detail = "Expense not found")
 
-expense2 = Expense(
-    amount = 200,
-    category = "watch",
-    description = "swatch watch"
-)
-expense.append(expense2)
+
+@app.delete("/expenses/{id}")
+async def delete_one_expense(id: int):
+    for item in expense:
+        if item.id == id:
+            expense.remove(item)
+            return {"Message" : "Item has been deleted"}
+    raise HTTPException(status_code = 404, detail = "Item could not be found")
